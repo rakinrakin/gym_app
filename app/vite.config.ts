@@ -18,7 +18,10 @@ export default defineConfig(({ mode }) => {
     ? { key: fs.readFileSync(".cert/dev-key.pem"), cert: fs.readFileSync(".cert/dev-cert.pem") }
     : undefined;
 
+  const base = env.VITE_BASE_PATH || (mode === "production" ? "/gym_app/" : "/");
+
   return {
+    base,
     plugins: [react()],
     server: {
       // Vite blocks unrecognized Host headers by default (DNS-rebinding

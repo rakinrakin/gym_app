@@ -14,8 +14,18 @@ import { useCurrentUser } from "../../features/profile/useCurrentUser";
 import { fetchUserProfile } from "../../features/running/runningApi";
 import type { UserProfileData } from "../../features/running/types";
 
+function getAppPath(pathname: string): string {
+  const base = import.meta.env.BASE_URL || "/";
+  const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
+  if (normalizedBase && pathname.startsWith(normalizedBase)) {
+    const stripped = pathname.slice(normalizedBase.length);
+    return stripped.startsWith("/") ? stripped : `/${stripped}`;
+  }
+  return pathname;
+}
+
 export function AppRouter() {
-  const [path, setPath] = useState(() => window.location.pathname);
+  const [path, setPath] = useState(() => getAppPath(window.location.pathname));
   const [search, setSearch] = useState(() => window.location.search);
   const [userProfile, setUserProfile] = useState<UserProfileData | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -25,7 +35,7 @@ export function AppRouter() {
 
   useEffect(() => {
     const onPopState = () => {
-      setPath(window.location.pathname);
+      setPath(getAppPath(window.location.pathname));
       setSearch(window.location.search);
     };
     window.addEventListener("popstate", onPopState);
@@ -48,7 +58,12 @@ export function AppRouter() {
 
   function navigate(nextPath: string) {
     const [nextPathname = "/", queryString = ""] = nextPath.split("?");
-    window.history.pushState({}, "", nextPath);
+    const base = import.meta.env.BASE_URL || "/";
+    const normalizedBase = base.endsWith("/") ? base.slice(0, -1) : base;
+    const fullPath = normalizedBase
+      ? `${normalizedBase}${nextPathname.startsWith("/") ? nextPathname : `/${nextPathname}`}${queryString ? `?${queryString}` : ""}`
+      : nextPath;
+    window.history.pushState({}, "", fullPath);
     setPath(nextPathname);
     setSearch(queryString ? `?${queryString}` : "");
   }
